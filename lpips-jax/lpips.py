@@ -1,5 +1,8 @@
 from typing import Optional, Any
+import pickle
+import jax
 import jax.numpy as jnp
+import flax
 import flax.linen as nn
 from .models import *
 
@@ -7,9 +10,29 @@ from .models import *
 Dtype = Any
 
 
+class LPIPSEvaluator:
+    def __init__(self, replicate=True, pretrained=True, net_type='alexnet', lpips=True,
+                 use_dropout=True, dtype=jnp.float32):
+        self.lpips = LPIPS(pretrained, net_type, lpips, use_dropout,
+                           training=False, dtype=dtype)
+        self.params = pickle.load(open(f'weights/{net_type}.ckpt', 'rb')) # TODO better pathing for pip installed package
+        if replicate:
+            self.params = flax.jax_utils.replicate(self.params)
+        
+        self.replicate = replicate
+    
+    def __call__(self, images_0, images_1):
+        fn = jax.pmap(self.lpips.apply) if self.replicate else self.lpips.apply
+        return fn(
+            self.params,
+            images_0,
+            images_1
+        ) 
+
+
 class LPIPS(nn.Module):
     pretrained: bool = True
-    net_type: str = 'alex'
+    net_type: str = 'alexnet'
     lpips: bool = True,
     use_dropout: bool = True
     training: bool = False
@@ -22,12 +45,12 @@ class LPIPS(nn.Module):
         images_0 = (images_0 - shift) / scale
         images_1 = (images_1 - shift) / scale
         
-        if self.net_type == 'alex':
+        if self.net_type == 'alexnet':
             net = AlexNet()
-        elif self.net_type in ['vgg', 'vgg16']:
+        elif self.net_type == 'vgg16':
             net = VGG16()
         else:
-            raise ValueError(f'Unsupported net_type: {self.net_type}. Must be in [alexnet, vgg, vgg16]')
+            raise ValueError(f'Unsupported net_type: {self.net_type}. Must be in [alexnet, vgg16]')
         
         outs_0, outs_1 = net(images_0), net(images_1)
         diffs = []
@@ -46,7 +69,7 @@ class LPIPS(nn.Module):
 
         val = sum(res)
         return val
-        
+
 
 def spatial_average(feat, keepdim=True):
     return jnp.mean(feat, axis=[1, 2], keepdim=keepdim)
