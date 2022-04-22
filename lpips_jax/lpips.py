@@ -1,3 +1,5 @@
+import os
+import inspect
 from typing import Optional, Any
 import pickle
 import jax
@@ -15,9 +17,11 @@ class LPIPSEvaluator:
                  use_dropout=True, dtype=jnp.float32):
         self.lpips = LPIPS(pretrained, net, lpips, use_dropout,
                            training=False, dtype=dtype)
-        self.params = pickle.load(open(f'weights/{net}.ckpt', 'rb')) # TODO better pathing for pip installed package
+        model_path = os.path.abspath(os.path.join(inspect.getfile(self.__init__), '..', f'weights/{net}.ckpt'))
+        self.params = pickle.load(open(model_path, 'rb'))
         if replicate:
             self.params = flax.jax_utils.replicate(self.params)
+        self.params = dict(params=self.params)
         
         self.replicate = replicate
     
@@ -63,18 +67,18 @@ class LPIPS(nn.Module):
             if self.lpips:
                 d = NetLinLayer(use_dropout=self.use_dropout)(d)
             else:
-                d = jnp.sum(d, axis=-1, keepdim=True)
-            d = spatial_average(d, keepdim=True)
+                d = jnp.sum(d, axis=-1, keepdims=True)
+            d = spatial_average(d, keepdims=True)
             res.append(d)
 
         val = sum(res)
         return val
 
 
-def spatial_average(feat, keepdim=True):
-    return jnp.mean(feat, axis=[1, 2], keepdim=keepdim)
+def spatial_average(feat, keepdims=True):
+    return jnp.mean(feat, axis=[1, 2], keepdims=keepdims)
 
 
 def normalize(feat, eps=1e-10):
-    norm_factor = jnp.sqrt(jnp.sum(feat ** 2, axis=-1, keepdim=True))
+    norm_factor = jnp.sqrt(jnp.sum(feat ** 2, axis=-1, keepdims=True))
     return feat / (norm_factor + eps)

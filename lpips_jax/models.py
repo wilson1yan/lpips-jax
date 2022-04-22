@@ -22,15 +22,15 @@ class AlexNet(nn.Module):
 
     @nn.compact
     def __call__(self, x: Array):
-        x = nn.Conv(64, (11, 11), strides=(4, 4), padding=2)(x)
+        x = nn.Conv(64, (11, 11), strides=(4, 4), padding=(2, 2))(x)
         x = nn.relu(x)
         relu_1 = x
-        x = nn.max_pool(x, (3, 3), strides=(2, 2), padding=0)
+        x = nn.max_pool(x, (3, 3), strides=(2, 2))
 
         x = nn.Conv(192, (5, 5), padding=2)(x)
         x = nn.relu(x)
         relu_2 = x
-        x = nn.max_pool(x, (3, 3), strides=(2, 2), padding=0)
+        x = nn.max_pool(x, (3, 3), strides=(2, 2))
 
         x = nn.Conv(384, (3, 3), padding=1)(x)
         x = nn.relu(x)
@@ -56,9 +56,9 @@ class VGG16(nn.Module):
         out = []
         for i, v in enumerate(cfg):
             if v == 'M':
-                x = nn.max_pool(x, (2, 2,), strides=(2, 2), padding=0)
+                x = nn.max_pool(x, (2, 2,), strides=(2, 2))
             else:
-                x = nn.Conv(v, (3, 3), padding=1)
+                x = nn.Conv(v, (3, 3), padding=(1, 1))(x)
                 x = nn.relu(x)
                 if i in layer_ids:
                     out.append(x)

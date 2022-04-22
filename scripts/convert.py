@@ -25,11 +25,12 @@ else:
     sd = {k: v.numpy() for k, v in sd.items()}
 
 
-def Conv(prefix):
-    return {
-        'kernel': np.transpose(sd[f'{prefix}.weight'], (2, 3, 1, 0)),
-        'bias': sd[f'{prefix}.bias']
-    }
+def Conv(prefix, bias=True):
+    params = dict()
+    params['kernel'] = np.transpose(sd[f'{prefix}.weight'], (2, 3, 1, 0))
+    if bias:
+        params['bias'] = sd[f'{prefix}.bias']
+    return params
 
 
 if args.net_type == 'alexnet':
@@ -56,7 +57,7 @@ if args.lin_path is not None:
     sd = {k: v.numpy() for k, v in sd.items()}
     for i in range(5):
         params[f'NetLinLayer_{i}'] = {
-            'kernel': sd[f'lin{i}.model.1.weight'].T
+            'Conv_0': Conv(f'lin{i}.model.1', bias=False)
         }
 
 pickle.dump(params, open(osp.join('weights', f'{args.net_type}.ckpt'), 'wb'))
