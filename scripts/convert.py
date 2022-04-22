@@ -22,7 +22,7 @@ if args.net_path is None:
         sd = vgg16(pretrained=True).state_dict()
 else:
     sd = torch.load(args.net_path, map_location='cpu')
-    sd = {k: v.numpy() for k, v in sd.items()}
+sd = {k: v.numpy() for k, v in sd.items()}
 
 
 def Conv(prefix, bias=True):
