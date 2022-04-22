@@ -13,7 +13,6 @@ class NetLinLayer(nn.Module):
     @nn.compact
     def __call__(self, x):
         if self.use_dropout:
-            # TODO check pytorch default dropout rate
             x = nn.Dropout(rate=0.5)(x, deterministic=not self.training)
         x = nn.Conv(self.features, (1, 1), padding=0, use_bias=False)(x)
         return x 

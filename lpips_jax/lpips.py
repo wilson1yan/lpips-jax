@@ -11,11 +11,11 @@ Dtype = Any
 
 
 class LPIPSEvaluator:
-    def __init__(self, replicate=True, pretrained=True, net_type='alexnet', lpips=True,
+    def __init__(self, replicate=True, pretrained=True, net='alexnet', lpips=True,
                  use_dropout=True, dtype=jnp.float32):
-        self.lpips = LPIPS(pretrained, net_type, lpips, use_dropout,
+        self.lpips = LPIPS(pretrained, net, lpips, use_dropout,
                            training=False, dtype=dtype)
-        self.params = pickle.load(open(f'weights/{net_type}.ckpt', 'rb')) # TODO better pathing for pip installed package
+        self.params = pickle.load(open(f'weights/{net}.ckpt', 'rb')) # TODO better pathing for pip installed package
         if replicate:
             self.params = flax.jax_utils.replicate(self.params)
         
@@ -33,7 +33,7 @@ class LPIPSEvaluator:
 class LPIPS(nn.Module):
     pretrained: bool = True
     net_type: str = 'alexnet'
-    lpips: bool = True,
+    lpips: bool = True
     use_dropout: bool = True
     training: bool = False
     dtype: Optional[Dtype] = jnp.float32

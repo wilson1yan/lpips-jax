@@ -1,20 +1,29 @@
 import numpy as np
-import torch
 import pickle
 import os.path as osp
 import argparse
 
+import torch
+from torchvision.models import alexnet, vgg16
+
 parser = argparse.ArgumentParser()
-parser.add_argument('-t', '--net_type', type=str, default='alexnet')
-parser.add_argument('-n', '--net_path', type=str, default='weights/alexnet_torch.pth',
-                    help='Path to pretrained net checkpoint')
+parser.add_argument('-t', '--net_type', type=str, default='alexnet', choices=['alexnet', 'vgg16'])
+parser.add_argument('-n', '--net_path', type=str, default=None,
+                    help='Path to pretrained net checkpoint. Will download if not provided.')
 parser.add_argument('-l', '--lin_path', type=str, default='weights/alexnet_linear_torch.pth',
                    help='Can be None. Path to pretrained LPIPs linear checkpoint')
 args = parser.parse_args()
 
 
-sd = torch.load(args.net_path, map_location='cpu')
-sd = {k: v.numpy() for k, v in sd.items()}
+if args.net_path is None:
+    if args.net_type == 'alexnet':
+        sd = alexnet(pretrained=True).state_dict()
+    elif args.net_type == 'vgg16':
+        sd = vgg16(pretrained=True).state_dict()
+else:
+    sd = torch.load(args.net_path, map_location='cpu')
+    sd = {k: v.numpy() for k, v in sd.items()}
+
 
 def Conv(prefix):
     return {
@@ -40,8 +49,7 @@ elif args.net_type in ['vgg16']:
         params[f'Conv_{i}'] = Conv(f'features.{lyr}')
     
     params = {'VGG16_0': params}
-else:
-    raise ValueError(f'Unsupported net_type:', args.net_type)
+
 
 if args.lin_path is not None:
     sd = torch.load(args.lin_path, map_location='cpu')

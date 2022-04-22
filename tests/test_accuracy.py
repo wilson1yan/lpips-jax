@@ -18,3 +18,5 @@ out_torch = lp_torch(torch.FloatTensor(images_0).movedim(-1, 1).to(device),
 # Flax / Jax
 lp_jax = lpips_jax.LPIPSEvaluator(replicate=False, net='alexnet')
 out_jax = lp_jax(images_0, images_1)
+
+print(out_torch, out_jax)
