@@ -19,7 +19,7 @@ out = lpips(images_0, images_1)
 
 For `replicate=True`
 ```python
-import lpipss_jax
+import lpips_jax
 import numpy as np
 import jax
 
