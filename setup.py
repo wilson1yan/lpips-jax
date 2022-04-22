@@ -12,4 +12,12 @@ setuptools.setup(
      long_description_content_type="text/markdown",
      url="https://github.com/wilson1yan/lpips-jax",
      packages=['lpips_jax'],
+     package_data={'lpips_jax': ['weights/*.ckpt']},
+     include_package_data=True,
+     install_requires=['jax', 'flax'],
+     classifiers=[
+         "Programming Language :: Python :: 3",
+         "License :: OSI Approved :: BSD License",
+         "Operating System :: OS Independent",
+     ]
  )
